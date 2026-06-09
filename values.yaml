@@ -1,0 +1,193 @@
+# Baseline Plex values. Override ingress, persistence, media mounts, and secrets in your deployment values.
+
+autoscan:
+  global:
+    fullnameOverride: autoscan
+  defaultPodOptions:
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
+  controllers:
+    main:
+      enabled: true
+      type: deployment
+      replicas: 1
+      containers:
+        main:
+          image:
+            repository: cloudb0x/autoscan
+            tag: latest
+            pullPolicy: IfNotPresent
+          env:
+            AUTOSCAN_CONFIG: /config/autoscan/config.yml
+            AUTOSCAN_DATABASE: /config/autoscan.db
+            AUTOSCAN_LOG: /config/activity.log
+            AUTOSCAN_VERBOSITY: "1"
+          probes:
+            startup:
+              enabled: true
+              custom: true
+              spec:
+                exec:
+                  command: ["stat", "/config/autoscan/config.yml"]
+                initialDelaySeconds: 5
+                periodSeconds: 5
+                timeoutSeconds: 2
+                failureThreshold: 30
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                exec:
+                  command: ["stat", "/config/autoscan/config.yml"]
+                periodSeconds: 20
+                timeoutSeconds: 2
+                failureThreshold: 3
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                exec:
+                  command: ["stat", "/config/autoscan/config.yml"]
+                periodSeconds: 10
+                timeoutSeconds: 2
+                failureThreshold: 3
+  service:
+    main:
+      enabled: false
+  persistence:
+    config:
+      type: emptyDir
+      globalMounts:
+        - path: /config
+    autoscan-config:
+      type: secret
+      name: plex-autoscan
+      defaultMode: 420
+      globalMounts:
+        - path: /config/autoscan
+    media:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      storageClass: ""
+      size: 100Gi
+      globalMounts:
+        - path: /media
+
+skip:
+  config: {}
+  logging:
+    rootLevel: INFO
+    consoleLevel: INFO
+    fileLevel: INFO
+    logFilename: activity.log
+  customJson: {}
+  defaultPodOptions:
+    annotations:
+      secret.reloader.stakater.com/reload: "plex-auto-skip"
+  persistence:
+    config:
+      enabled: true
+      type: secret
+      name: plex-auto-skip
+      globalMounts:
+        - path: /config
+          readOnly: false
+  controllers:
+    main:
+      containers:
+        main:
+          env:
+            PAS_UPDATE: "true"
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 100m
+
+plex:
+  rbac:
+    roles: {}
+  controllers:
+    main:
+      enabled: true
+      containers:
+        main:
+          image:
+            repository: linuxserver/plex
+            pullPolicy: IfNotPresent
+            tag: latest
+          env:
+            ADVERTISE_IP: https://plex.example.com:443
+            GID: "1000"
+            PGID: "1000"
+            PUID: "1000"
+            TZ: UTC
+            VERSION: public
+  ingress:
+    main:
+      enabled: true
+      annotations:
+        external-dns.alpha.kubernetes.io/target: example.com
+        nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+        nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+      hosts:
+        - host: plex.example.com
+          paths:
+            - path: /
+              service:
+                port: 32400
+                service: null
+  podSecurityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: Always
+  persistence:
+    config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      storageClass: ""
+      size: 10Gi
+      globalMounts:
+        - path: /config
+    transcode:
+      enabled: true
+      type: emptyDir
+      globalMounts:
+        - path: /transcode
+  probes:
+    startup:
+      custom: true
+      spec:
+        failureThreshold: 90
+        periodSeconds: 5
+        successThreshold: 1
+        tcpSocket:
+          port: 32400
+        timeoutSeconds: 1
+        initialDelaySeconds: 30
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+  service:
+    main:
+      controller: main
+      enabled: true
+      type: ClusterIP
+      ports:
+        http:
+          enabled: true
+          port: 32400
+          primary: true
+      primary: true
+
+onepassworditem:
+  enabled: true
+  defaultVault: ""
+  items: []

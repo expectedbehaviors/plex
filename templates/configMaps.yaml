@@ -1,0 +1,22 @@
+{{- /*
+  Plex chart: ConfigMap for plex-autoskip (config.ini, logging.ini, custom.json).
+  Renders when skip.plexAutoskipConfig.create is "configmap". Mount via skip.persistence.config (type: configMap, name: plex-auto-skip).
+*/ -}}
+{{- if and .Values.skip (kindIs "map" .Values.skip) (index .Values.skip "plexAutoskipConfig") (eq (index (index .Values.skip "plexAutoskipConfig") "create") "configmap") }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: plex-auto-skip
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  config.ini: |
+{{ include "plex_autoskip_config_ini_values" . | trim | indent 4 }}
+  logging.ini: |
+{{ include "plex_autoskip_logging_ini_content" . | trim | indent 4 }}
+  custom.json: |
+{{ include "plex_autoskip_custom_json_content" . | trim | indent 4 }}
+{{- end }}

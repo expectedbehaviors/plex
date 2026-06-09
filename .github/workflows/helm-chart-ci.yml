@@ -1,0 +1,58 @@
+name: Helm chart CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Chart.yaml'
+      - 'values.yaml'
+      - 'values/**'
+      - 'README.md'
+      - '.helmignore'
+      - 'templates/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Chart.yaml'
+      - 'values.yaml'
+      - 'values/**'
+      - 'README.md'
+      - '.helmignore'
+      - 'templates/**'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      baseline_version:
+        description: 'First release version when no tags exist (e.g. 1.0.0)'
+        required: false
+      release_tag:
+        description: 'Release tag override (e.g. plex-v1.0.0)'
+        required: false
+
+concurrency: helm-chart-plex
+
+jobs:
+  ci:
+    permissions:
+      contents: write
+      pull-requests: read
+    uses: expectedbehaviors/github-actions/.github/workflows/helm-chart-ci.yml@main
+    secrets: inherit
+    with:
+      chart_path: .
+      chart_name: plex
+      tag_prefix: plex-v
+      helm_repositories: |
+        gabe565=https://charts.gabe565.com
+        plex-autoskip=https://expectedbehaviors.github.io/plex-autoskip-helm-chart
+        bjw-s=https://bjw-s-labs.github.io/helm-charts
+        onepassworditem=https://expectedbehaviors.github.io/OnePasswordItem-helm
+      helm_repo_name: gabe565
+      helm_repo_url: https://charts.gabe565.com
+      helm_repo_name_2: bjw-s
+      helm_repo_url_2: https://bjw-s-labs.github.io/helm-charts
+      publish_enabled: true
+      release_notes_enabled: true
+      initial_version: ${{ github.event.inputs.baseline_version || '' }}
+      release_tag: ${{ github.event.inputs.release_tag || '' }}
