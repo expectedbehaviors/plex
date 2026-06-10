@@ -1,0 +1,39 @@
+apiVersion: v1
+entries:
+  plex:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-06-10T02:41:26.271799234Z"
+    dependencies:
+    - name: plex
+      repository: https://charts.gabe565.com
+      version: 0.5.1
+    - alias: skip
+      name: plex-auto-skip
+      repository: https://expectedbehaviors.github.io/plex-autoskip-helm-chart
+      version: 0.0.5
+    - alias: autoscan
+      name: app-template
+      repository: https://bjw-s-labs.github.io/helm-charts
+      version: 4.6.2
+    - name: onepassworditem
+      repository: https://expectedbehaviors.github.io/OnePasswordItem-helm
+      version: 1.1.1
+    description: Plex Media Server with autoskip, autoscan, and optional OnePasswordItem
+      secrets sync.
+    digest: 3faf4d885189d89b3949a2e2f8a17e0ab3555c385bf90998b5b713a8808d32a8
+    home: https://charts.gabe565.com/charts/plex/
+    icon: https://www.plex.tv/wp-content/uploads/2018/01/pmp-icon-1.png
+    keywords:
+    - plex
+    - plex-media-server
+    kubeVersion: '>=1.22.0-0'
+    name: plex
+    sources:
+    - https://github.com/gabe565/charts/tree/main/charts/plex
+    - https://hub.docker.com/r/linuxserver/plex
+    type: application
+    urls:
+    - https://expectedbehaviors.github.io/plex/plex-1.0.0.tgz
+    version: 1.0.0
+generated: "2026-06-10T02:41:26.256006826Z"
