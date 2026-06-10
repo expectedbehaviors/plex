@@ -1,6 +1,6 @@
 apiVersion: v2
 type: application
-appVersion: v1.28.0.5999-97678ded3
+appVersion: 1.0.0
 description: Plex Media Server with autoskip, autoscan, and optional OnePasswordItem secrets sync.
 name: plex
 version: 1.0.0
